@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>生日快乐！🎂 优美音乐烟花版</title>
+  <meta name="description" content="打开即播放生日歌，放烟花送祝福～">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #FF6B9D, #C44569);
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      box-sizing: border-box;
+      color: white;
+      opacity: 0;
+      animation: pageFade 0.5s ease forwards;
+      font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+      overflow-x: hidden;
+    }
+    @keyframes pageFade { to { opacity: 1; } }
+    
+    .container { max-width: 380px; margin: 0 auto; }
+    .card {
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(8px);
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      text-align: center;
+      position: relative;
+      z-index: 10;
+    }
+    .btn {
+      width: 100%;
+      padding: 14px 0;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 8px 0;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 8px rgba(0,0,0,0.15); }
+    .btn:active { transform: scale(0.98); }
+    .auto-play-tip {
+      font-size: 14px;
+      color: #fff8f8;
+      margin: 10px 0 5px;
+    }
+    
+    .cake {
+      position: relative;
+      width: 120px;
+      height: 60px;
+      margin: 0 auto 20px;
+    }
+    .cake-base {
+      position: absolute;
+      bottom: 0;
+      width: 120px;
+      height: 40px;
+      background: #FFB347;
+      border-radius: 10px 10px 0 0;
+    }
+    .cake-top {
+      position: absolute;
+      bottom: 40px;
+      width: 100px;
+      height: 20px;
+      background: #FF8A65;
+      border-radius: 10px 10px 0 0;
+      left: 10px;
+    }
+    .candle {
+      position: absolute;
+      bottom: 60px;
+      width: 6px;
+      height: 20px;
+      background: #4ECDC4;
+      left: 57px;
+      border-radius: 3px 3px 0 0;
+    }
+    .flame {
+      position: absolute;
+      bottom: 80px;
+      width: 12px;
+      height: 15px;
+      background: #FFE066;
+      border-radius: 50% 50% 20% 20%;
+      left: 54px;
+      animation: flicker 1.5s infinite alternate;
+      box-shadow: 0 0 10px #FFE066;
+    }
+    @keyframes flicker {
+      0%, 100% { transform: scaleY(1); }
+      50% { transform: scaleY(1.1); }
+    }
+
+    /* 烟花动画 */
+    .firework {
+      position: fixed;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      z-index: 5;
+      animation: rise 0.8s linear forwards;
+    }
+    .firework-burst {
+      position: fixed;
+      border-radius: 50%;
+      z-index: 5;
+      animation: burst 0.7s ease-out forwards;
+    }
+    @keyframes rise { 
+      0% { top: 100vh; opacity: 1; } 
+      100% { top: 20vh; opacity: 0; } 
+    }
+    @keyframes burst { 
+      0% { transform: scale(1); opacity: 1; } 
+      100% { transform: scale(18); opacity: 0; } 
+    }
+    
+    .balloon {
+      position: absolute;
+      width: 40px;
+      height: 50px;
+      border-radius: 50%;
+      animation: float 15s infinite linear;
+      opacity: 0.7;
+      z-index: 1;
+    }
+    .balloon:nth-child(1) { 
+      background: #FF6B6B; 
+      left: 10%; 
+      animation-delay: 0s;
+      animation-duration: 18s;
+    }
+    .balloon:nth-child(2) { 
+      background: #4ECDC4; 
+      left: 30%; 
+      animation-delay: 2s;
+      animation-duration: 20s;
+    }
+    .balloon:nth-child(3) { 
+      background: #FFE066; 
+      left: 50%; 
+      animation-delay: 4s;
+      animation-duration: 22s;
+    }
+    .balloon:nth-child(4) { 
+      background: #FF8A65; 
+      left: 70%; 
+      animation-delay: 6s;
+      animation-duration: 24s;
+    }
+    .balloon:nth-child(5) { 
+      background: #9B59B6; 
+      left: 90%; 
+      animation-delay: 8s;
+      animation-duration: 26s;
+    }
+    @keyframes float {
+      0% { bottom: -60px; }
+      100% { bottom: 100vh; }
+    }
+    
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background-color: #f00;
+      opacity: 0.7;
+      z-index: 4;
+    }
+    
+    .message {
+      background: rgba(255,255,255,0.3);
+      border-radius: 10px;
+      padding: 15px;
+      margin: 15px 0;
+      font-style: italic;
+    }
+    
+    .music-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+    }
+    
+    .slider-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      margin: 5px 0;
+    }
+    
+    .slider-label {
+      font-size: 12px;
+      margin-bottom: 5px;
+      color: #fff8f8;
+    }
+    
+    .slider {
+      width: 100%;
+      height: 5px;
+      -webkit-appearance: none;
+      background: rgba(255,255,255,0.3);
+      border-radius: 5px;
+      outline: none;
+    }
+    
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: #FFE066;
+      cursor: pointer;
+    }
+    
+    .speed-display {
+      font-size: 12px;
+      color: #fff8f8;
+      margin-top: 5px;
+    }
+    
+    /* 非常柔和的闪光效果 */
+    .flash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.05); /* 非常低的透明度 */
+      opacity: 0;
+      z-index: 7;
+      pointer-events: none;
+      mix-blend-mode: screen; /* 使用屏幕混合模式使闪光更自然 */
+    }
+    
+    .particle {
+      position: fixed;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: white;
+      opacity: 0;
+      z-index: 6;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 漂浮气球 -->
+  <div class="balloon"></div>
+  <div class="balloon"></div>
+  <div class="balloon"></div>
+  <div class="balloon"></div>
+  <div class="balloon"></div>
+  
+  <!-- 非常柔和的闪光效果 -->
+  <div class="flash" id="flash"></div>
+  
+  <div class="container">
+    <div class="text-center mb-5">
+      <h1 class="text-4xl font-bold text-yellow-300 drop-shadow-md">生日快乐</h1>
+      <div class="cake">
+        <div class="cake-base"></div>
+        <div class="cake-top"></div>
+        <div class="candle"></div>
+        <div class="flame"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <!-- 祝福语 -->
+      <div class="message">
+        <p class="text-lg font-medium">🎉 今天是你的特别日子 🎉</p>
+        <p class="mt-3">愿你的生命如烟花般绚烂多彩，</p>
+        <p>愿你的笑容如阳光般温暖灿烂，</p>
+        <p>愿你的每一天都充满惊喜与欢乐！</p>
+        <p class="mt-3 font-semibold">祝你生日快乐，永远幸福！✨</p>
+      </div>
+
+      <!-- 自动播放音频区 -->
+      <div>
+        <p class="auto-play-tip">一段美妙的生日旋律即将为你奏响，愿这歌声能为你带来满满的喜悦与祝福</p>
+        <!-- 使用本地音乐文件 -->
+        <audio id="autoPlayAudio" loop preload="auto" class="w-full mt-4">
+          <source src="birthday-song.mp3" type="audio/mpeg">
+        </audio>
+        
+        <!-- 音乐控制 -->
+        <div class="music-controls">
+          <div class="control-row">
+            <button id="playBtn" class="btn bg-green-500 text-white" style="width: auto; padding: 8px 15px;">
+              播放 🎵
+            </button>
+            <button id="pauseBtn" class="btn bg-blue-500 text-white" style="width: auto; padding: 8px 15px;">
+              暂停 ⏸️
+            </button>
+          </div>
+          
+          <!-- 音量控制 -->
+          <div class="slider-container">
+            <div class="slider-label">音量</div>
+            <input type="range" id="volumeSlider" class="slider" min="0" max="1" step="0.1" value="0.7">
+          </div>
+          
+          <!-- 速度控制 -->
+          <div class="slider-container">
+            <div class="slider-label">播放速度</div>
+            <input type="range" id="speedSlider" class="slider" min="0.5" max="2" step="0.1" value="1">
+            <div class="speed-display" id="speedDisplay">1.0x</div>
+          </div>
+        </div>
+        
+        <!-- 备用播放按钮（若自动播放失败） -->
+        <button id="backupPlayBtn" class="btn bg-purple-500 text-white mt-6" style="display: none;">
+          点击播放生日歌 🎵
+        </button>
+      </div>
+
+      <!-- 烟花按钮 -->
+      <button id="fireworkBtn" class="btn bg-yellow-400 text-gray-800 mt-6">
+        放烟花 🎇
+      </button>
+
+      <!-- 二维码分享 -->
+      <div class="mt-15">
+        <p class="mb-3">扫码分享这份祝福</p>
+        <div id="qrcode" class="mx-auto w-40 h-40 bg-white p-2 rounded-lg"></div>
+        <p class="text-sm mt-3 opacity-80">微信右上角"···"也可分享</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      // 1. 二维码生成
+      try {
+        new QRCode(document.getElementById('qrcode'), {
+          text: window.location.href,
+          width: 140,
+          height: 140,
+          colorDark: '#000',
+          colorLight: '#fff',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      } catch (e) {
+        document.getElementById('qrcode').innerHTML = '<span class="text-center text-black text-sm p-2 block">点击分享</span>';
+      }
+
+      // 2. 核心：自动播放音频
+      const audio = document.getElementById('autoPlayAudio');
+      const backupBtn = document.getElementById('backupPlayBtn');
+      const playBtn = document.getElementById('playBtn');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const volumeSlider = document.getElementById('volumeSlider');
+      const speedSlider = document.getElementById('speedSlider');
+      const speedDisplay = document.getElementById('speedDisplay');
+      const flash = document.getElementById('flash');
+      let playTried = false;
+      
+      // 预加载本地爆炸声
+      const explosionSounds = [];
+      for (let i = 0; i < 5; i++) {
+        const explosionSound = new Audio();
+        explosionSound.src = "explosion.mp3"; // 使用本地爆炸声音效
+        explosionSound.volume = 0.5;
+        explosionSound.load();
+        explosionSounds.push(explosionSound);
+      }
+      let explosionSoundIndex = 0;
+
+      // 设置初始音量和速度
+      audio.volume = 0.7;
+      audio.playbackRate = 1.0;
+      
+      // 音量控制
+      volumeSlider.addEventListener('input', function() {
+        audio.volume = this.value;
+      });
+      
+      // 速度控制
+      speedSlider.addEventListener('input', function() {
+        audio.playbackRate = this.value;
+        speedDisplay.textContent = this.value + 'x';
+      });
+      
+      // 播放按钮
+      playBtn.addEventListener('click', function() {
+        audio.play().catch(err => {
+          document.querySelector('.auto-play-tip').textContent = '播放失败，请点击下方按钮重试';
+          backupBtn.style.display = 'block';
+        });
+      });
+      
+      // 暂停按钮
+      pauseBtn.addEventListener('click', function() {
+        audio.pause();
+      });
+
+      // 页面加载后尝试自动播放
+      setTimeout(() => {
+        triggerAutoPlay();
+      }, 500);
+
+      // 监听页面交互
+      document.body.addEventListener('touchstart', triggerAutoPlay, { once: true });
+      document.body.addEventListener('click', triggerAutoPlay, { once: true });
+
+      // 自动播放核心函数
+      function triggerAutoPlay() {
+        if (playTried || !audio.paused) return;
+        playTried = true;
+        
+        audio.play().then(() => {
+          document.querySelector('.auto-play-tip').textContent = '正在播放生日歌～';
+          backupBtn.style.display = 'none';
+        }).catch(err => {
+          // 自动播放失败，显示备用按钮
+          document.querySelector('.auto-play-tip').textContent = '自动播放需要权限，点击按钮播放：';
+          backupBtn.style.display = 'block';
+        });
+      }
+
+      // 备用按钮播放逻辑
+      backupBtn.addEventListener('click', () => {
+        audio.play().then(() => {
+          document.querySelector('.auto-play-tip').textContent = '正在播放生日歌～';
+          backupBtn.style.display = 'none';
+        }).catch(err => {
+          if (navigator.userAgent.includes('MicroMessenger')) {
+            alert('请开启权限：长按页面空白处→权限管理→允许音频');
+          } else {
+            alert('请在浏览器设置中允许声音权限');
+          }
+        });
+      });
+
+      // 3. 烟花功能（使用本地爆炸声和柔和闪光效果）
+      document.getElementById('fireworkBtn').onclick = function() {
+        const colors = ['#FFE066', '#FF6B6B', '#4ECDC4', '#F38181', '#9B59B6', '#1ABC9C'];
+        
+        // 确保在用户交互后播放声音
+        const playExplosionSound = () => {
+          try {
+            const explosionSound = explosionSounds[explosionSoundIndex];
+            explosionSound.currentTime = 0;
+            explosionSound.play().catch(e => {
+              console.log("爆炸声播放失败:", e);
+            });
+            explosionSoundIndex = (explosionSoundIndex + 1) % explosionSounds.length;
+          } catch(e) {
+            console.log("爆炸声播放异常:", e);
+          }
+        };
+        
+        // 非常柔和的闪光效果
+        const addFlash = () => {
+          flash.animate([
+            { opacity: 0.08 }, // 非常低的透明度
+            { opacity: 0 }
+          ], {
+            duration: 80, // 非常短的持续时间
+            easing: 'ease-out'
+          });
+        };
+        
+        // 添加小粒子效果代替强闪光
+        const addParticles = (x, y) => {
+          for (let i = 0; i < 5; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = x;
+            particle.style.top = y;
+            document.body.appendChild(particle);
+            
+            // 粒子动画
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 5 + Math.random() * 10;
+            particle.animate([
+              { 
+                opacity: 0.7,
+                transform: 'translate(0, 0) scale(1)'
+              },
+              { 
+                opacity: 0,
+                transform: `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0.5)`
+              }
+            ], {
+              duration: 400 + Math.random() * 200,
+              easing: 'ease-out'
+            });
+            
+            setTimeout(() => particle.remove(), 600);
+          }
+        };
+        
+        for (let i = 0; i < 12; i++) {
+          setTimeout(() => {
+            // 烟花上升
+            const fw = document.createElement('div');
+            fw.className = 'firework';
+            const leftPos = Math.random() * 85 + 7.5 + 'vw';
+            fw.style.left = leftPos;
+            fw.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            document.body.appendChild(fw);
+
+            // 爆炸效果
+            setTimeout(() => {
+              fw.remove();
+              
+              // 播放爆炸声
+              playExplosionSound();
+              
+              // 添加非常柔和的闪光效果
+              addFlash();
+              
+              // 添加小粒子效果
+              addParticles(leftPos, fw.style.top);
+              
+              // 创建爆炸粒子
+              const particleCount = 30 + Math.floor(Math.random() * 20);
+              for (let j = 0; j < particleCount; j++) {
+                const burst = document.createElement('div');
+                burst.className = 'firework-burst';
+                burst.style.left = leftPos;
+                burst.style.top = fw.style.top;
+                burst.style.width = Math.random() * 4 + 2 + 'px';
+                burst.style.height = burst.style.width;
+                burst.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                document.body.appendChild(burst);
+                
+                // 随机方向移动
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 20 + Math.random() * 60;
+                burst.style.transform = `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(1)`;
+                
+                setTimeout(() => burst.remove(), 700);
+              }
+            }, 800);
+          }, i * 150);
+        }
+      };
+      
+      // 4. 添加一些彩色纸屑效果
+      function createConfetti() {
+        const colors = ['#FF6B6B', '#4ECDC4', '#FFE066', '#FF8A65', '#9B59B6'];
+        for (let i = 0; i < 50; i++) {
+          setTimeout(() => {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+            document.body.appendChild(confetti);
+            
+            // 动画
+            const animation = confetti.animate([
+              { top: '-10px', transform: `rotate(0deg) scale(1)` },
+              { top: '100vh', transform: `rotate(${Math.random() * 720}deg) scale(0.5)` }
+            ], {
+              duration: 3000 + Math.random() * 3000,
+              easing: 'cubic-bezier(0.1, 0.2, 0.8, 0.9)'
+            });
+            
+            animation.onfinish = () => confetti.remove();
+          }, i * 100);
+        }
+      }
+      
+      // 页面加载后创建一些纸屑
+      setTimeout(createConfetti, 1000);
+    };
+  </script>
+</body>
+</html>
